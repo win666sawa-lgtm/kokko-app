@@ -98,19 +98,18 @@ const $ = id => document.getElementById(id);
 
 let lvl = 1, timeLeft = 30, timer = null, gameOver = false;
 
-function rndPos(rect, pad) {
+// パーセンテージ座標で配置（レイアウトに依存しない）
+function rndPct() {
   return {
-    x: pad + Math.random() * (rect.width  - pad * 2),
-    y: pad + Math.random() * (rect.height - pad * 2),
+    x: 6 + Math.random() * 88,   // 6%〜94%
+    y: 18 + Math.random() * 76,  // 18%〜94%（上部のヒント領域を避ける）
   };
 }
 
 function gen() {
   const field = $('field');
   field.innerHTML = '';
-  const stage = $('stage');
-  const rect = stage.getBoundingClientRect();
-  const num = 30 + lvl * 15;
+  const num = 25 + lvl * 12;
   const ksize = Math.max(35, 65 - lvl * 4);
 
   // ダミー
@@ -118,27 +117,29 @@ function gen() {
     const e = document.createElement('div');
     e.className = 'item';
     e.textContent = DECOYS[Math.floor(Math.random() * DECOYS.length)];
-    e.style.fontSize = (1.6 + Math.random() * 0.8) + 'em';
-    const p = rndPos(rect, 30);
-    e.style.left = p.x + 'px';
-    e.style.top  = p.y + 'px';
+    e.style.fontSize = (1.5 + Math.random() * 0.8) + 'em';
+    const p = rndPct();
+    e.style.left = p.x + '%';
+    e.style.top  = p.y + '%';
     e.addEventListener('click', (ev) => {
+      if (gameOver) return;
       KokkoSound.wrong();
       timeLeft = Math.max(0, timeLeft - 2);
       $('time').textContent = timeLeft;
-      ripple(ev.clientX - rect.left, ev.clientY - rect.top, field);
+      const fr = field.getBoundingClientRect();
+      ripple(ev.clientX - fr.left, ev.clientY - fr.top, field);
     });
     field.appendChild(e);
   }
 
-  // 本物のこっこちゃん（最後に追加して上に表示）
+  // 本物のこっこちゃん
   const k = document.createElement('div');
   k.className = 'item kokko';
   k.style.setProperty('--ksize', ksize + 'px');
   k.innerHTML = '<img src="../number-collect/assets/kokko.png" alt="こっこちゃん">';
-  const p = rndPos(rect, 50);
-  k.style.left = p.x + 'px';
-  k.style.top  = p.y + 'px';
+  const p = rndPct();
+  k.style.left = p.x + '%';
+  k.style.top  = p.y + '%';
   k.addEventListener('click', () => found(k));
   field.appendChild(k);
 }

@@ -75,11 +75,26 @@ canvas { display: block; margin: 0 auto; background: #fff; border-radius: 12px; 
   cursor: pointer;
 }
 .col.active { border-color: #5d4037; transform: scale(1.15); }
-.tools { display: flex; gap: 8px; justify-content: center; padding: 4px; }
-.tools button {
-  padding: 8px 14px; background: #fff; border: 2px solid #ff7043;
-  color: #e64a19; border-radius: 12px; font-weight: bold; cursor: pointer;
+.tools {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  padding: 4px;
+  flex-wrap: wrap;
 }
+.tools button {
+  padding: 8px 12px;
+  background: #fff;
+  border: 2px solid #ff7043;
+  color: #e64a19;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-family: inherit;
+  touch-action: manipulation;
+}
+.tools button:active { transform: translateY(2px); }
 .size { display: flex; gap: 4px; justify-content: center; padding: 4px; align-items:center; font-size: 0.85em; }
 .size input { width: 100px; }
 </style>
@@ -91,16 +106,16 @@ canvas { display: block; margin: 0 auto; background: #fff; border-radius: 12px; 
     <h1>🎨 おえかき</h1>
     <div class="hud">こっこちゃんを<br>いろどってね！</div>
   </header>
-  <div id="stage" style="display:flex;align-items:center;justify-content:center;">
-    <canvas id="cv" width="320" height="380"></canvas>
+  <div class="tools">
+    <button id="bSave">💾 ほぞん</button>
+    <button id="bShare" style="background:#ff7043; color:#fff; border-color:#ff7043;">📤 シェア</button>
+    <button id="bErase">⬜ けしごむ</button>
+    <button id="bClear">🗑 けす</button>
   </div>
   <div class="colors" id="palette"></div>
   <div class="size">ふとさ <input type="range" id="sz" min="2" max="30" value="8"></div>
-  <div class="tools">
-    <button id="bClear">🗑 ぜんぶ消す</button>
-    <button id="bErase">⬜ けしごむ</button>
-    <button id="bSave">💾 ほぞん</button>
-    <button id="bShare" style="background:#ff7043; color:#fff; border-color:#ff7043;">📤 シェア</button>
+  <div id="stage" style="display:flex;align-items:center;justify-content:center;flex:1;min-height:0;">
+    <canvas id="cv" width="320" height="380" style="max-height:100%;width:auto;"></canvas>
   </div>
 </div>
 

@@ -7,6 +7,67 @@
 <link rel="stylesheet" href="../_shared/style.css">
 <style>
 canvas { display: block; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: inset 0 0 0 4px #ffb27a; touch-action: none; cursor: crosshair; max-width: 100%; }
+
+/* シェアモーダル */
+.share-modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200;
+}
+.share-modal.hidden { display: none !important; }
+.share-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 20px;
+  max-width: 90%;
+  width: 340px;
+  box-shadow: 0 10px 0 #ffb27a;
+}
+.share-card h2 {
+  margin: 0 0 12px;
+  color: #e64a19;
+  text-align: center;
+  font-size: 1.3em;
+}
+.share-card p {
+  margin: 0 0 8px;
+  font-size: 0.9em;
+  color: #5d4037;
+}
+.share-card textarea {
+  width: 100%;
+  padding: 8px;
+  border: 2px solid #ff7043;
+  border-radius: 8px;
+  font-size: 1em;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+#shareHint {
+  font-size: 0.8em;
+  color: #777;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+.share-btns {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+.cancel-btn, .go-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1em;
+  font-family: inherit;
+}
+.cancel-btn { background: #fff; border: 2px solid #ff7043; color: #e64a19; }
+.go-btn { background: #ff7043; border: 2px solid #ff7043; color: #fff; }
+.cancel-btn:active, .go-btn:active { transform: translateY(2px); }
 .colors { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; padding: 8px; }
 .col {
   width: 36px; height: 36px; border-radius: 50%;
@@ -39,20 +100,20 @@ canvas { display: block; margin: 0 auto; background: #fff; border-radius: 12px; 
     <button id="bClear">🗑 ぜんぶ消す</button>
     <button id="bErase">⬜ けしごむ</button>
     <button id="bSave">💾 ほぞん</button>
-    <button id="bShare" style="background:#1da1f2; color:#fff; border-color:#1da1f2;">𝕏 投稿</button>
+    <button id="bShare" style="background:#ff7043; color:#fff; border-color:#ff7043;">📤 シェア</button>
   </div>
 </div>
 
-<!-- X投稿モーダル -->
-<div id="shareModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:200;">
-  <div style="background:#fff;padding:20px;border-radius:20px;max-width:90%;width:340px;box-shadow:0 10px 0 #ffb27a;">
-    <h2 style="margin:0 0 12px;color:#e64a19;text-align:center;font-size:1.3em;">𝕏 で投稿</h2>
-    <p style="margin:0 0 8px;font-size:0.9em;color:#5d4037;">コメントを入れてね（@kokkotoasobo と #こっこちゃんとあそぼ は自動で入るよ）</p>
-    <textarea id="shareText" rows="3" placeholder="ぬったよ〜！😊" style="width:100%;padding:8px;border:2px solid #ff7043;border-radius:8px;font-size:1em;font-family:inherit;resize:vertical;box-sizing:border-box;"></textarea>
-    <div id="shareHint" style="font-size:0.8em;color:#777;margin-top:8px;line-height:1.5;"></div>
-    <div style="display:flex;gap:8px;margin-top:14px;">
-      <button id="shareCancel" style="flex:1;padding:10px;background:#fff;border:2px solid #ff7043;color:#e64a19;border-radius:12px;font-weight:bold;cursor:pointer;">キャンセル</button>
-      <button id="shareGo" style="flex:1;padding:10px;background:#1da1f2;border:2px solid #1da1f2;color:#fff;border-radius:12px;font-weight:bold;cursor:pointer;">𝕏 で投稿</button>
+<!-- シェアモーダル -->
+<div id="shareModal" class="share-modal hidden">
+  <div class="share-card">
+    <h2>📤 シェア</h2>
+    <p>コメントを入れてね（@kokkotoasobo と #こっこちゃんとあそぼ は自動で入るよ）</p>
+    <textarea id="shareText" rows="3" placeholder="ぬったよ〜！😊"></textarea>
+    <div id="shareHint"></div>
+    <div class="share-btns">
+      <button id="shareCancel" class="cancel-btn">キャンセル</button>
+      <button id="shareGo" class="go-btn">📤 シェアする</button>
     </div>
   </div>
 </div>
@@ -147,14 +208,20 @@ function canvasToBlob(){
 $('bShare').onclick=()=>{
   $('shareModal').classList.remove('hidden');
   const hint=$('shareHint');
-  if(navigator.canShare && navigator.canShare({files:[new File([new Blob()],'t.png',{type:'image/png'})]})){
-    hint.innerHTML='✅ このデバイスでは <b>画像つきで直接共有</b>できます。「𝕏で投稿」を押すと共有メニューが開きます。';
+  let canFiles=false;
+  try{
+    canFiles=navigator.canShare && navigator.canShare({files:[new File([new Blob()],'t.png',{type:'image/png'})]});
+  }catch(e){}
+  if(canFiles){
+    hint.innerHTML='✅ <b>画像つきで X / LINE / Instagram / TikTok などお好きなSNSへ投稿できます！</b><br>「シェアする」を押すと共有メニューが開きます。';
   }else{
-    hint.innerHTML='💡 このデバイス（PCなど）では画像を直接添付できないため、<b>1) 画像が自動でダウンロード</b>され、<b>2) Xの投稿画面が開きます</b>。X画面でダウンロードした画像を手動で添付してください。';
+    hint.innerHTML='💡 このデバイス（PCなど）では画像を直接添付できないため、<b>1) 画像が自動でダウンロード</b>され、<b>2) Xの投稿画面が開きます</b>。<br>他のSNSに投稿したい場合は、ダウンロードした画像を手動でアップロードしてください。';
   }
 };
 
-$('shareCancel').onclick=()=>$('shareModal').classList.add('hidden');
+$('shareCancel').addEventListener('click',()=>{
+  $('shareModal').classList.add('hidden');
+});
 
 $('shareGo').onclick=async()=>{
   const userText=$('shareText').value.trim();

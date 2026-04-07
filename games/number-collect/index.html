@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>こっこちゃんの すうじあつめ</title>
+<meta name="description" content="こっこちゃんと一緒に1から順番にたまごをタップして数字を覚えよう！ 子ども向け知育ゲーム。">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <a href="../../" class="back">← もどる</a>
+    <h1>🥚 すうじあつめ</h1>
+    <div class="hud">
+      <span class="score">てん: <b id="score">0</b></span>
+      <span class="hearts" id="hearts">❤️❤️❤️</span>
+    </div>
+  </header>
+
+  <div id="message">1から じゅんばんに タップしてね！</div>
+
+  <div id="stage">
+    <div id="kokko">
+      <img src="assets/kokko.png" alt="こっこちゃん" id="kokkoImg">
+      <div id="kokkoBubble">がんばろう！</div>
+    </div>
+    <div id="eggs"></div>
+  </div>
+
+  <div id="controls">
+    <button id="startBtn" class="big">▶ スタート</button>
+  </div>
+
+  <div id="overlay" class="hidden">
+    <div class="card">
+      <h2 id="overTitle">クリア！</h2>
+      <p id="overText"></p>
+      <button id="overBtn" class="big">もういちど</button>
+    </div>
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>

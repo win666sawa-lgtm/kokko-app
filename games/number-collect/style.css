@@ -1,0 +1,169 @@
+/* こっこちゃん すうじあつめ */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  font-family: -apple-system, "Segoe UI", "Hiragino Maru Gothic ProN", "Yu Gothic UI", "Comic Sans MS", sans-serif;
+  background: linear-gradient(180deg, #ffe8d6 0%, #ffd1a8 100%);
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#app {
+  display: flex; flex-direction: column;
+  height: 100dvh; max-width: 720px; margin: 0 auto;
+  padding: 8px;
+}
+
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 10px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 0 #ffb27a;
+  margin-bottom: 8px;
+}
+header h1 {
+  margin: 0; font-size: 1.1em; color: #e64a19;
+  text-align: center; flex: 1;
+}
+.back {
+  font-size: 0.85em; color: #e64a19; text-decoration: none;
+  padding: 4px 8px; border-radius: 8px; background: #fff3e0;
+}
+.hud { display: flex; flex-direction: column; align-items: flex-end; font-size: 0.85em; gap: 2px; }
+.hud b { color: #e64a19; font-size: 1.1em; }
+
+#message {
+  text-align: center;
+  font-size: 1.05em;
+  color: #5d4037;
+  background: #fff8e1;
+  padding: 8px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  min-height: 1.5em;
+  font-weight: bold;
+}
+
+#stage {
+  flex: 1;
+  position: relative;
+  background: radial-gradient(ellipse at center, #fff5e6 0%, #ffe0b2 100%);
+  border-radius: 20px;
+  border: 4px dashed #ffb27a;
+  overflow: hidden;
+}
+
+#kokko {
+  position: absolute;
+  left: 8px; bottom: 8px;
+  width: 90px;
+  z-index: 5;
+  pointer-events: none;
+}
+#kokko img { width: 100%; display: block; }
+#kokkoBubble {
+  position: absolute;
+  top: -10px; left: 70px;
+  background: #fff;
+  border: 2px solid #ff7043;
+  border-radius: 14px;
+  padding: 4px 10px;
+  font-size: 0.85em;
+  white-space: nowrap;
+  color: #e64a19;
+  font-weight: bold;
+  box-shadow: 0 2px 0 #ffb27a;
+}
+
+#eggs { position: absolute; inset: 0; }
+
+.egg {
+  position: absolute;
+  width: 70px; height: 84px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(0,0,0,0.25);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: transform 0.15s;
+  transform: translate(-50%, -50%);
+}
+.egg::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: var(--c, #ff7043);
+  border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+  z-index: -1;
+  box-shadow: inset -8px -10px 0 rgba(0,0,0,0.12), 0 4px 0 rgba(0,0,0,0.15);
+}
+.egg span { position: relative; z-index: 1; }
+.egg.pop { animation: pop 0.4s forwards; pointer-events: none; }
+.egg.shake { animation: shake 0.4s; }
+
+@keyframes pop {
+  0%   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  50%  { transform: translate(-50%, -50%) scale(1.4) rotate(15deg); }
+  100% { transform: translate(-50%, -50%) scale(0) rotate(-30deg); opacity: 0; }
+}
+@keyframes shake {
+  0%, 100% { transform: translate(-50%, -50%) translateX(0); }
+  25% { transform: translate(-50%, -50%) translateX(-8px); }
+  75% { transform: translate(-50%, -50%) translateX(8px); }
+}
+@keyframes float {
+  0%, 100% { margin-top: 0; }
+  50% { margin-top: -4px; }
+}
+.egg { animation: float 2s ease-in-out infinite; }
+
+#controls {
+  text-align: center;
+  padding: 8px;
+}
+.big {
+  font-size: 1.2em;
+  padding: 12px 28px;
+  background: #ff7043;
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 5px 0 #c63d0c;
+  cursor: pointer;
+  font-weight: bold;
+}
+.big:active { transform: translateY(3px); box-shadow: 0 2px 0 #c63d0c; }
+
+#overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+}
+#overlay.hidden { display: none; }
+.card {
+  background: #fff;
+  padding: 24px 32px;
+  border-radius: 24px;
+  text-align: center;
+  box-shadow: 0 10px 0 #ffb27a;
+  max-width: 80%;
+}
+.card h2 { color: #e64a19; margin-top: 0; font-size: 1.8em; }
+.card p { font-size: 1.1em; color: #5d4037; }
+
+.chick {
+  position: absolute;
+  font-size: 2em;
+  pointer-events: none;
+  animation: chickRise 1s forwards;
+}
+@keyframes chickRise {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  30% { transform: translate(-50%, -80%) scale(1.2); opacity: 1; }
+  100% { transform: translate(-50%, -160%) scale(1); opacity: 0; }
+}

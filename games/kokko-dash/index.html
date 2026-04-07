@@ -6,7 +6,14 @@
 <title>こっこダッシュ | こっこちゃん</title>
 <link rel="stylesheet" href="../_shared/style.css">
 <style>
-canvas { display: block; margin: 0 auto; background: linear-gradient(180deg,#87ceeb 0%,#b3e5fc 70%,#8bc34a 70%,#7cb342 100%); border-radius: 12px; box-shadow: inset 0 0 0 4px #ffb27a; touch-action: manipulation; }
+canvas { display: block; margin: 0 auto; background: linear-gradient(180deg,#87ceeb 0%,#b3e5fc 70%,#8bc34a 70%,#7cb342 100%); border-radius: 12px; box-shadow: inset 0 0 0 4px #ffb27a; touch-action: none; max-width: 100%; }
+.jump-btn {
+  display: block; margin: 8px auto 0; padding: 14px 40px;
+  font-size: 1.2em; background: #ff7043; color: #fff; border: none;
+  border-radius: 16px; box-shadow: 0 5px 0 #c63d0c; font-weight: bold;
+  touch-action: manipulation;
+}
+.jump-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #c63d0c; }
 </style>
 </head>
 <body>
@@ -17,8 +24,9 @@ canvas { display: block; margin: 0 auto; background: linear-gradient(180deg,#87c
     <div class="hud">てん: <b id="score">0</b></div>
   </header>
   <div id="message">タップ／スペースで ジャンプ！</div>
-  <div id="stage" style="display:flex;align-items:center;justify-content:center;">
+  <div id="stage" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px;">
     <canvas id="cv" width="600" height="300"></canvas>
+    <button class="jump-btn" id="jumpBtn">⬆ ジャンプ</button>
   </div>
 </div>
 <div id="overlay" class="hidden"><div class="card">
@@ -121,6 +129,8 @@ function draw(){
 }
 cv.addEventListener('click',jump);
 cv.addEventListener('touchstart',e=>{e.preventDefault();jump();},{passive:false});
+document.getElementById('jumpBtn').addEventListener('click',jump);
+document.getElementById('jumpBtn').addEventListener('touchstart',e=>{e.preventDefault();jump();},{passive:false});
 document.addEventListener('keydown',e=>{if(e.key===' '||e.key==='ArrowUp')jump();});
 $('overBtn').onclick=()=>{$('overlay').classList.add('hidden');reset();step();};
 reset();step();

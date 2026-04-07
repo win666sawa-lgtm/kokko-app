@@ -6,7 +6,11 @@ html, body {
   background: linear-gradient(180deg, #ffe8d6 0%, #ffd1a8 100%);
   overflow: hidden; user-select: none; -webkit-user-select: none;
   color: #5d4037;
+  touch-action: manipulation; /* ダブルタップズーム遅延を消す */
+  overscroll-behavior: none; /* 引っ張り更新を防ぐ */
 }
+button, .choice, .cell, .key, .item, .box, .egg { touch-action: manipulation; }
+canvas { touch-action: none; } /* ゲームキャンバスはスクロール無効 */
 #app { display: flex; flex-direction: column; height: 100dvh; max-width: 720px; margin: 0 auto; padding: 8px; }
 header {
   display: flex; align-items: center; justify-content: space-between;

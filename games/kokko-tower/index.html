@@ -6,8 +6,16 @@
 <title>こっこタワー | こっこちゃん</title>
 <link rel="stylesheet" href="../_shared/style.css">
 <style>
-canvas { display: block; margin: 0 auto; background: linear-gradient(180deg,#87ceeb 0%,#b3e5fc 60%,#ffe0b2 100%); border-radius: 12px; box-shadow: inset 0 0 0 4px #ffb27a; touch-action: manipulation; }
-.tap-hint { text-align:center; color:#5d4037; font-size:0.9em; margin-top:4px;}
+canvas { display: block; margin: 0 auto; background: linear-gradient(180deg,#87ceeb 0%,#b3e5fc 60%,#ffe0b2 100%); border-radius: 12px; box-shadow: inset 0 0 0 4px #ffb27a; touch-action: none; max-width: 100%; max-height: 100%; }
+#stage { padding: 4px; }
+.tap-hint { text-align:center; color:#5d4037; font-size:0.85em; margin-top:4px;}
+.drop-btn {
+  display: block; margin: 8px auto 0; padding: 14px 32px;
+  font-size: 1.2em; background: #ff7043; color: #fff; border: none;
+  border-radius: 16px; box-shadow: 0 5px 0 #c63d0c; font-weight: bold;
+  cursor: pointer; touch-action: manipulation;
+}
+.drop-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #c63d0c; }
 </style>
 </head>
 <body>
@@ -21,7 +29,8 @@ canvas { display: block; margin: 0 auto; background: linear-gradient(180deg,#87c
   <div id="stage" style="display:flex;align-items:center;justify-content:center;">
     <canvas id="cv" width="320" height="500"></canvas>
   </div>
-  <p class="tap-hint">画面をタップで落下 / ぴったり重ねてタワーを高くしよう</p>
+  <button class="drop-btn" id="dropBtn">⬇ おとす</button>
+  <p class="tap-hint">画面または「おとす」ボタンで落下 / ぴったり重ねてね</p>
 </div>
 <div id="overlay" class="hidden"><div class="card">
   <h2>くずれちゃった！</h2><p id="overText"></p>
@@ -110,6 +119,8 @@ function drop(){
 }
 cv.addEventListener('click',drop);
 cv.addEventListener('touchstart',e=>{e.preventDefault();drop();},{passive:false});
+document.getElementById('dropBtn').addEventListener('click',drop);
+document.getElementById('dropBtn').addEventListener('touchstart',e=>{e.preventDefault();drop();},{passive:false});
 document.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter')drop();});
 $('overBtn').onclick=()=>{$('overlay').classList.add('hidden');reset();};
 reset();step();

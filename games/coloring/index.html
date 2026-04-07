@@ -39,6 +39,21 @@ canvas { display: block; margin: 0 auto; background: #fff; border-radius: 12px; 
     <button id="bClear">🗑 ぜんぶ消す</button>
     <button id="bErase">⬜ けしごむ</button>
     <button id="bSave">💾 ほぞん</button>
+    <button id="bShare" style="background:#1da1f2; color:#fff; border-color:#1da1f2;">𝕏 投稿</button>
+  </div>
+</div>
+
+<!-- X投稿モーダル -->
+<div id="shareModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:200;">
+  <div style="background:#fff;padding:20px;border-radius:20px;max-width:90%;width:340px;box-shadow:0 10px 0 #ffb27a;">
+    <h2 style="margin:0 0 12px;color:#e64a19;text-align:center;font-size:1.3em;">𝕏 で投稿</h2>
+    <p style="margin:0 0 8px;font-size:0.9em;color:#5d4037;">コメントを入れてね（@kokkotoasobo と #こっこちゃんとあそぼ は自動で入るよ）</p>
+    <textarea id="shareText" rows="3" placeholder="ぬったよ〜！😊" style="width:100%;padding:8px;border:2px solid #ff7043;border-radius:8px;font-size:1em;font-family:inherit;resize:vertical;box-sizing:border-box;"></textarea>
+    <div id="shareHint" style="font-size:0.8em;color:#777;margin-top:8px;line-height:1.5;"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button id="shareCancel" style="flex:1;padding:10px;background:#fff;border:2px solid #ff7043;color:#e64a19;border-radius:12px;font-weight:bold;cursor:pointer;">キャンセル</button>
+      <button id="shareGo" style="flex:1;padding:10px;background:#1da1f2;border:2px solid #1da1f2;color:#fff;border-radius:12px;font-weight:bold;cursor:pointer;">𝕏 で投稿</button>
+    </div>
   </div>
 </div>
 <script>
@@ -120,6 +135,66 @@ $('bSave').onclick=()=>{
   a.href=cv.toDataURL();
   a.click();
 };
+
+// === X投稿機能 ===
+const MENTION='@kokkotoasobo';
+const HASHTAG='#こっこちゃんとあそぼ';
+
+function canvasToBlob(){
+  return new Promise(resolve=>cv.toBlob(b=>resolve(b),'image/png'));
+}
+
+$('bShare').onclick=()=>{
+  $('shareModal').classList.remove('hidden');
+  const hint=$('shareHint');
+  if(navigator.canShare && navigator.canShare({files:[new File([new Blob()],'t.png',{type:'image/png'})]})){
+    hint.innerHTML='✅ このデバイスでは <b>画像つきで直接共有</b>できます。「𝕏で投稿」を押すと共有メニューが開きます。';
+  }else{
+    hint.innerHTML='💡 このデバイス（PCなど）では画像を直接添付できないため、<b>1) 画像が自動でダウンロード</b>され、<b>2) Xの投稿画面が開きます</b>。X画面でダウンロードした画像を手動で添付してください。';
+  }
+};
+
+$('shareCancel').onclick=()=>$('shareModal').classList.add('hidden');
+
+$('shareGo').onclick=async()=>{
+  const userText=$('shareText').value.trim();
+  const text=(userText?userText+'\n\n':'')+MENTION+' '+HASHTAG;
+  $('shareModal').classList.add('hidden');
+
+  try{
+    const blob=await canvasToBlob();
+    if(!blob){throw new Error('blob failed');}
+    const file=new File([blob],'kokko-coloring.png',{type:'image/png'});
+
+    // モバイル等：Web Share API でファイル付き共有
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{
+        await navigator.share({
+          text:text,
+          files:[file],
+        });
+        return;
+      }catch(e){
+        if(e.name==='AbortError')return;
+        // フォールバックへ
+      }
+    }
+
+    // フォールバック：画像ダウンロード + X投稿画面
+    const a=document.createElement('a');
+    a.download='kokko-coloring.png';
+    a.href=cv.toDataURL();
+    a.click();
+    // 少し待ってからXを開く
+    setTimeout(()=>{
+      const url='https://twitter.com/intent/tweet?text='+encodeURIComponent(text);
+      window.open(url,'_blank','noopener');
+    },300);
+  }catch(e){
+    alert('共有に失敗しました: '+e.message);
+  }
+};
+
 buildPalette();drawTemplate();
 </script>
 </body>

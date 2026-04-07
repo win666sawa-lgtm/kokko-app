@@ -40,8 +40,12 @@ const W=cv.width,H=cv.height,GROUND=H-50;
 let kokko,obstacles,score,speed,gameOver,frame;
 const $=id=>document.getElementById(id);
 
+// こっこちゃん画像
+const kokkoImg=new Image();
+kokkoImg.src='../number-collect/assets/kokko.png';
+
 function reset(){
-  kokko={x:60,y:GROUND-40,w:36,h:40,vy:0,jumping:false};
+  kokko={x:60,y:GROUND-70,w:55,h:70,vy:0,jumping:false};
   obstacles=[];score=0;speed=5;gameOver=false;frame=0;
   $('score').textContent=0;
 }
@@ -89,23 +93,25 @@ function draw(){
     const x=((frame*0.5+i*250)%(W+100))-50;
     ctx.beginPath();ctx.arc(x,60,18,0,Math.PI*2);ctx.arc(x+22,60,22,0,Math.PI*2);ctx.arc(x+44,60,18,0,Math.PI*2);ctx.fill();
   }
-  // こっこちゃん（簡易）
-  ctx.fillStyle='#ab47bc';
-  ctx.fillRect(kokko.x,kokko.y+10,kokko.w,kokko.h-10);
-  ctx.fillStyle='#ffe0b2';
-  ctx.beginPath();ctx.arc(kokko.x+kokko.w/2,kokko.y+10,12,0,Math.PI*2);ctx.fill();
-  // 髪
-  ctx.fillStyle='#5d4037';
-  ctx.fillRect(kokko.x+4,kokko.y-2,kokko.w-8,8);
-  // 目
-  ctx.fillStyle='#000';
-  ctx.beginPath();ctx.arc(kokko.x+kokko.w/2-4,kokko.y+10,1.5,0,Math.PI*2);ctx.arc(kokko.x+kokko.w/2+4,kokko.y+10,1.5,0,Math.PI*2);ctx.fill();
-  // 足アニメ
-  if(!kokko.jumping){
-    ctx.fillStyle='#5d4037';
-    const f=Math.floor(frame/5)%2;
-    ctx.fillRect(kokko.x+8,kokko.y+kokko.h-4+f*2,8,4);
-    ctx.fillRect(kokko.x+kokko.w-16,kokko.y+kokko.h-4-f*2,8,4);
+  // こっこちゃん（画像 + ジャンプ時の小さな回転）
+  if(kokkoImg.complete && kokkoImg.naturalWidth>0){
+    ctx.save();
+    const cx=kokko.x+kokko.w/2, cy=kokko.y+kokko.h/2;
+    if(kokko.jumping){
+      ctx.translate(cx,cy);
+      ctx.rotate(Math.sin(frame*0.2)*0.1);
+      ctx.translate(-cx,-cy);
+    }else{
+      // 走るときに少し上下バウンス
+      const bounce=Math.sin(frame*0.3)*1.5;
+      ctx.translate(0,bounce);
+    }
+    ctx.drawImage(kokkoImg,kokko.x,kokko.y,kokko.w,kokko.h);
+    ctx.restore();
+  }else{
+    // 画像が読み込まれてない時のフォールバック
+    ctx.fillStyle='#ab47bc';
+    ctx.fillRect(kokko.x,kokko.y+10,kokko.w,kokko.h-10);
   }
   // 障害物
   for(const o of obstacles){

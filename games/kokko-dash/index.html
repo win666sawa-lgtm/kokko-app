@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>こっこダッシュ | こっこちゃん</title>
+<link rel="stylesheet" href="../_shared/style.css">
+<style>
+canvas { display: block; margin: 0 auto; background: linear-gradient(180deg,#87ceeb 0%,#b3e5fc 70%,#8bc34a 70%,#7cb342 100%); border-radius: 12px; box-shadow: inset 0 0 0 4px #ffb27a; touch-action: manipulation; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <a href="../../" class="back">← もどる</a>
+    <h1>🏃 こっこダッシュ</h1>
+    <div class="hud">てん: <b id="score">0</b></div>
+  </header>
+  <div id="message">タップ／スペースで ジャンプ！</div>
+  <div id="stage" style="display:flex;align-items:center;justify-content:center;">
+    <canvas id="cv" width="600" height="300"></canvas>
+  </div>
+</div>
+<div id="overlay" class="hidden"><div class="card">
+  <h2>ゲームオーバー</h2><p id="overText"></p>
+  <button id="overBtn" class="big">もういちど</button>
+</div></div>
+<script src="../_shared/sound.js"></script>
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const W=cv.width,H=cv.height,GROUND=H-50;
+let kokko,obstacles,score,speed,gameOver,frame;
+const $=id=>document.getElementById(id);
+
+function reset(){
+  kokko={x:60,y:GROUND-40,w:36,h:40,vy:0,jumping:false};
+  obstacles=[];score=0;speed=5;gameOver=false;frame=0;
+  $('score').textContent=0;
+}
+function jump(){
+  if(gameOver){reset();return;}
+  if(!kokko.jumping){kokko.vy=-12;kokko.jumping=true;KokkoSound.jump();}
+}
+function step(){
+  if(gameOver)return;
+  frame++;
+  // 物理
+  kokko.vy+=0.6;
+  kokko.y+=kokko.vy;
+  if(kokko.y>=GROUND-kokko.h){kokko.y=GROUND-kokko.h;kokko.vy=0;kokko.jumping=false;}
+  // 障害物生成
+  if(frame%80===0){
+    const type=Math.random()<0.7?'cactus':'bird';
+    if(type==='cactus')obstacles.push({x:W,y:GROUND-30,w:20,h:30,t:'c'});
+    else obstacles.push({x:W,y:GROUND-70,w:30,h:20,t:'b'});
+  }
+  // 移動
+  for(const o of obstacles)o.x-=speed;
+  obstacles=obstacles.filter(o=>o.x+o.w>0);
+  // 当たり判定
+  for(const o of obstacles){
+    if(kokko.x<o.x+o.w&&kokko.x+kokko.w>o.x&&kokko.y<o.y+o.h&&kokko.y+kokko.h>o.y){
+      KokkoSound.over();gameOver=true;
+      $('overText').textContent=`てん: ${score}`;
+      setTimeout(()=>$('overlay').classList.remove('hidden'),500);
+    }
+  }
+  score++;$('score').textContent=score;
+  if(score%200===0)speed+=0.5;
+  draw();
+  requestAnimationFrame(step);
+}
+function draw(){
+  // 空＋地面
+  const grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'#87ceeb');grad.addColorStop(0.7,'#b3e5fc');grad.addColorStop(0.7,'#8bc34a');grad.addColorStop(1,'#7cb342');
+  ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+  // 雲
+  ctx.fillStyle='rgba(255,255,255,0.9)';
+  for(let i=0;i<3;i++){
+    const x=((frame*0.5+i*250)%(W+100))-50;
+    ctx.beginPath();ctx.arc(x,60,18,0,Math.PI*2);ctx.arc(x+22,60,22,0,Math.PI*2);ctx.arc(x+44,60,18,0,Math.PI*2);ctx.fill();
+  }
+  // こっこちゃん（簡易）
+  ctx.fillStyle='#ab47bc';
+  ctx.fillRect(kokko.x,kokko.y+10,kokko.w,kokko.h-10);
+  ctx.fillStyle='#ffe0b2';
+  ctx.beginPath();ctx.arc(kokko.x+kokko.w/2,kokko.y+10,12,0,Math.PI*2);ctx.fill();
+  // 髪
+  ctx.fillStyle='#5d4037';
+  ctx.fillRect(kokko.x+4,kokko.y-2,kokko.w-8,8);
+  // 目
+  ctx.fillStyle='#000';
+  ctx.beginPath();ctx.arc(kokko.x+kokko.w/2-4,kokko.y+10,1.5,0,Math.PI*2);ctx.arc(kokko.x+kokko.w/2+4,kokko.y+10,1.5,0,Math.PI*2);ctx.fill();
+  // 足アニメ
+  if(!kokko.jumping){
+    ctx.fillStyle='#5d4037';
+    const f=Math.floor(frame/5)%2;
+    ctx.fillRect(kokko.x+8,kokko.y+kokko.h-4+f*2,8,4);
+    ctx.fillRect(kokko.x+kokko.w-16,kokko.y+kokko.h-4-f*2,8,4);
+  }
+  // 障害物
+  for(const o of obstacles){
+    if(o.t==='c'){
+      ctx.fillStyle='#33691e';
+      ctx.fillRect(o.x,o.y,o.w,o.h);
+      ctx.fillRect(o.x-5,o.y+8,5,15);
+      ctx.fillRect(o.x+o.w,o.y+8,5,15);
+    }else{
+      ctx.fillStyle='#37474f';
+      ctx.beginPath();ctx.ellipse(o.x+o.w/2,o.y+o.h/2,o.w/2,o.h/2,0,0,Math.PI*2);ctx.fill();
+      // 翼アニメ
+      ctx.beginPath();
+      const wing=Math.floor(frame/10)%2;
+      ctx.moveTo(o.x+5,o.y+o.h/2);
+      ctx.lineTo(o.x+15,wing?o.y-5:o.y+o.h+5);
+      ctx.lineTo(o.x+25,o.y+o.h/2);
+      ctx.fill();
+    }
+  }
+}
+cv.addEventListener('click',jump);
+cv.addEventListener('touchstart',e=>{e.preventDefault();jump();},{passive:false});
+document.addEventListener('keydown',e=>{if(e.key===' '||e.key==='ArrowUp')jump();});
+$('overBtn').onclick=()=>{$('overlay').classList.add('hidden');reset();step();};
+reset();step();
+</script>
+</body>
+</html>

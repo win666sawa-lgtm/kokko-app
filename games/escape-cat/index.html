@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ねこからにげろ | こっこちゃん</title>
+<link rel="stylesheet" href="../_shared/style.css">
+<style>
+canvas { display: block; margin: 0 auto; background: #c5e1a5; border-radius: 12px; box-shadow: inset 0 0 0 4px #ffb27a; touch-action: none; }
+.pad { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; padding: 6px; max-width: 240px; margin: 0 auto; }
+.pad button { padding: 14px 0; font-size: 1.4em; background: #ff7043; color:#fff; border:none; border-radius: 12px; box-shadow: 0 4px 0 #c63d0c; font-weight: bold; }
+.pad .none { visibility: hidden; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <a href="../../" class="back">← もどる</a>
+    <h1>🐱 ねこからにげろ</h1>
+    <div class="hud">たまご: <b id="eggs">0</b><br>たいむ: <b id="time">30</b></div>
+  </header>
+  <div id="message">たまごを集めながら ねこから逃げて！</div>
+  <div id="stage" style="display:flex;align-items:center;justify-content:center;">
+    <canvas id="cv" width="360" height="360"></canvas>
+  </div>
+  <div class="pad">
+    <button class="none"></button><button id="bU">▲</button><button class="none"></button>
+    <button id="bL">◀</button><button id="bD">▼</button><button id="bR">▶</button>
+  </div>
+</div>
+<div id="overlay" class="hidden"><div class="card">
+  <h2 id="overTitle">ゲームオーバー</h2><p id="overText"></p>
+  <button id="overBtn" class="big">もういちど</button>
+</div></div>
+<script src="../_shared/sound.js"></script>
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const W=cv.width,H=cv.height,SIZE=24;
+let kokko,cat,eggs,collected,timeLeft,gameOver,timer,tick;
+const $=id=>document.getElementById(id);
+
+function reset(){
+  kokko={x:W/2,y:H/2,vx:0,vy:0};
+  cat={x:30,y:30};
+  eggs=[];collected=0;timeLeft=30;gameOver=false;
+  for(let i=0;i<8;i++)spawnEgg();
+  $('eggs').textContent=0;$('time').textContent=30;
+}
+function spawnEgg(){eggs.push({x:30+Math.random()*(W-60),y:30+Math.random()*(H-60)});}
+function step(){
+  if(gameOver)return;
+  // 移動
+  kokko.x+=kokko.vx;kokko.y+=kokko.vy;
+  kokko.x=Math.max(SIZE,Math.min(W-SIZE,kokko.x));
+  kokko.y=Math.max(SIZE,Math.min(H-SIZE,kokko.y));
+  // 猫追跡
+  const dx=kokko.x-cat.x,dy=kokko.y-cat.y;
+  const d=Math.hypot(dx,dy);
+  if(d>0){cat.x+=(dx/d)*1.8;cat.y+=(dy/d)*1.8;}
+  // たまご収集
+  eggs=eggs.filter(e=>{
+    if(Math.hypot(e.x-kokko.x,e.y-kokko.y)<SIZE){
+      KokkoSound.pickup();collected++;$('eggs').textContent=collected;
+      spawnEgg();return false;
+    }
+    return true;
+  });
+  // 衝突
+  if(Math.hypot(cat.x-kokko.x,cat.y-kokko.y)<SIZE+5){
+    KokkoSound.over();gameOver=true;
+    $('overTitle').textContent='つかまった！';
+    $('overText').textContent=`たまご: ${collected}個`;
+    $('overlay').classList.remove('hidden');
+    clearInterval(timer);return;
+  }
+  draw();
+  requestAnimationFrame(step);
+}
+function draw(){
+  ctx.fillStyle='#c5e1a5';ctx.fillRect(0,0,W,H);
+  // 草
+  ctx.fillStyle='#aed581';
+  for(let i=0;i<20;i++){const x=(i*53)%W,y=(i*97)%H;ctx.fillRect(x,y,3,8);}
+  // たまご
+  for(const e of eggs){
+    ctx.fillStyle='#fff';
+    ctx.beginPath();ctx.ellipse(e.x,e.y,8,10,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ffe0b2';
+    ctx.beginPath();ctx.ellipse(e.x-2,e.y-2,3,4,0,0,Math.PI*2);ctx.fill();
+  }
+  // ねこ
+  ctx.fillStyle='#37474f';
+  ctx.beginPath();ctx.arc(cat.x,cat.y,14,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.moveTo(cat.x-12,cat.y-8);ctx.lineTo(cat.x-6,cat.y-18);ctx.lineTo(cat.x-2,cat.y-10);ctx.fill();
+  ctx.beginPath();ctx.moveTo(cat.x+12,cat.y-8);ctx.lineTo(cat.x+6,cat.y-18);ctx.lineTo(cat.x+2,cat.y-10);ctx.fill();
+  ctx.fillStyle='#ffeb3b';
+  ctx.beginPath();ctx.arc(cat.x-4,cat.y-2,2,0,Math.PI*2);ctx.arc(cat.x+4,cat.y-2,2,0,Math.PI*2);ctx.fill();
+  // こっこちゃん
+  ctx.fillStyle='#ab47bc';
+  ctx.fillRect(kokko.x-10,kokko.y-2,20,18);
+  ctx.fillStyle='#ffe0b2';
+  ctx.beginPath();ctx.arc(kokko.x,kokko.y-4,11,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#5d4037';
+  ctx.fillRect(kokko.x-9,kokko.y-13,18,6);
+  ctx.fillStyle='#000';
+  ctx.beginPath();ctx.arc(kokko.x-3,kokko.y-4,1.5,0,Math.PI*2);ctx.arc(kokko.x+3,kokko.y-4,1.5,0,Math.PI*2);ctx.fill();
+}
+function setVel(dx,dy){kokko.vx=dx*3;kokko.vy=dy*3;}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft')setVel(-1,0);
+  else if(e.key==='ArrowRight')setVel(1,0);
+  else if(e.key==='ArrowUp')setVel(0,-1);
+  else if(e.key==='ArrowDown')setVel(0,1);
+});
+document.addEventListener('keyup',e=>{
+  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))setVel(0,0);
+});
+function bind(id,dx,dy){
+  const b=$(id);
+  const start=e=>{e.preventDefault();setVel(dx,dy);};
+  const end=e=>{e.preventDefault();setVel(0,0);};
+  b.addEventListener('touchstart',start,{passive:false});
+  b.addEventListener('touchend',end,{passive:false});
+  b.addEventListener('mousedown',start);
+  b.addEventListener('mouseup',end);
+  b.addEventListener('mouseleave',end);
+}
+bind('bL',-1,0);bind('bR',1,0);bind('bU',0,-1);bind('bD',0,1);
+$('overBtn').onclick=()=>{$('overlay').classList.add('hidden');reset();timer=setInterval(()=>{
+  timeLeft--;$('time').textContent=timeLeft;
+  if(timeLeft<=0){gameOver=true;clearInterval(timer);KokkoSound.clear();
+    $('overTitle').textContent='クリア！';
+    $('overText').textContent=`たまご: ${collected}個`;
+    $('overlay').classList.remove('hidden');}
+},1000);step();};
+reset();
+timer=setInterval(()=>{
+  timeLeft--;$('time').textContent=timeLeft;
+  if(timeLeft<=0){gameOver=true;clearInterval(timer);KokkoSound.clear();
+    $('overTitle').textContent='クリア！';
+    $('overText').textContent=`たまご: ${collected}個`;
+    $('overlay').classList.remove('hidden');}
+},1000);
+step();
+</script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>こっこタワー | こっこちゃん</title>
+<link rel="stylesheet" href="../_shared/style.css">
+<style>
+canvas { display: block; margin: 0 auto; background: linear-gradient(180deg,#87ceeb 0%,#b3e5fc 60%,#ffe0b2 100%); border-radius: 12px; box-shadow: inset 0 0 0 4px #ffb27a; touch-action: manipulation; }
+.tap-hint { text-align:center; color:#5d4037; font-size:0.9em; margin-top:4px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <a href="../../" class="back">← もどる</a>
+    <h1>🗼 こっこタワー</h1>
+    <div class="hud">たかさ: <b id="score">0</b></div>
+  </header>
+  <div id="message">タップして こっこちゃんを 落とそう！</div>
+  <div id="stage" style="display:flex;align-items:center;justify-content:center;">
+    <canvas id="cv" width="320" height="500"></canvas>
+  </div>
+  <p class="tap-hint">画面をタップで落下 / ぴったり重ねてタワーを高くしよう</p>
+</div>
+<div id="overlay" class="hidden"><div class="card">
+  <h2>くずれちゃった！</h2><p id="overText"></p>
+  <button id="overBtn" class="big">もういちど</button>
+</div></div>
+<script src="../_shared/sound.js"></script>
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const W=cv.width,H=cv.height;
+const COLORS=['#ff7043','#ffca28','#66bb6a','#42a5f5','#ab47bc','#ec407a'];
+let stack,moving,dir,score,gameOver,offsetY;
+const $=id=>document.getElementById(id);
+
+function reset(){
+  stack=[{x:W/2-40,y:H-50,w:80,c:0}];
+  spawn();score=0;gameOver=false;offsetY=0;
+  $('score').textContent=0;
+}
+function spawn(){
+  const top=stack[stack.length-1];
+  moving={x:0,y:top.y-50+offsetY,w:top.w,c:(top.c+1)%COLORS.length,vx:3+Math.min(5,score*0.1)};
+  dir=1;
+}
+function step(){
+  if(gameOver){draw();return;}
+  if(moving){
+    moving.x+=moving.vx*dir;
+    if(moving.x<0){moving.x=0;dir=1;}
+    if(moving.x+moving.w>W){moving.x=W-moving.w;dir=-1;}
+  }
+  draw();
+  requestAnimationFrame(step);
+}
+function draw(){
+  ctx.fillStyle='#87ceeb';
+  const grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'#87ceeb');grad.addColorStop(0.6,'#b3e5fc');grad.addColorStop(1,'#ffe0b2');
+  ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+  // 雲
+  ctx.fillStyle='rgba(255,255,255,0.8)';
+  ctx.beginPath();ctx.arc(50,80,20,0,Math.PI*2);ctx.arc(75,80,25,0,Math.PI*2);ctx.arc(100,80,20,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(220,140,18,0,Math.PI*2);ctx.arc(245,140,22,0,Math.PI*2);ctx.fill();
+  // スタック描画（オフセット）
+  ctx.save();
+  ctx.translate(0,-offsetY);
+  for(const b of stack)drawKokko(b);
+  if(moving)drawKokko(moving);
+  ctx.restore();
+}
+function drawKokko(b){
+  // 体
+  ctx.fillStyle=COLORS[b.c];
+  ctx.beginPath();
+  ctx.roundRect?ctx.roundRect(b.x,b.y,b.w,40,8):ctx.rect(b.x,b.y,b.w,40);
+  ctx.fill();
+  // 顔（ピンクの丸）
+  ctx.fillStyle='#ffe0b2';
+  ctx.beginPath();ctx.arc(b.x+b.w/2,b.y+12,10,0,Math.PI*2);ctx.fill();
+  // 目
+  ctx.fillStyle='#000';
+  ctx.beginPath();ctx.arc(b.x+b.w/2-4,b.y+12,1.5,0,Math.PI*2);ctx.arc(b.x+b.w/2+4,b.y+12,1.5,0,Math.PI*2);ctx.fill();
+  // ほっぺ
+  ctx.fillStyle='#ffb6c1';
+  ctx.beginPath();ctx.arc(b.x+b.w/2-7,b.y+15,2,0,Math.PI*2);ctx.arc(b.x+b.w/2+7,b.y+15,2,0,Math.PI*2);ctx.fill();
+}
+function drop(){
+  if(gameOver||!moving)return;
+  const top=stack[stack.length-1];
+  const left=Math.max(moving.x,top.x);
+  const right=Math.min(moving.x+moving.w,top.x+top.w);
+  const overlap=right-left;
+  if(overlap<=10){
+    KokkoSound.over();
+    gameOver=true;
+    $('overText').textContent=`たかさ: ${score}`;
+    setTimeout(()=>$('overlay').classList.remove('hidden'),500);
+    return;
+  }
+  KokkoSound.pop();
+  moving.x=left;moving.w=overlap;
+  stack.push(moving);
+  score++;$('score').textContent=score;
+  // 上にスクロール
+  if(stack.length>5)offsetY+=50;
+  spawn();
+}
+cv.addEventListener('click',drop);
+cv.addEventListener('touchstart',e=>{e.preventDefault();drop();},{passive:false});
+document.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter')drop();});
+$('overBtn').onclick=()=>{$('overlay').classList.add('hidden');reset();};
+reset();step();
+</script>
+</body>
+</html>

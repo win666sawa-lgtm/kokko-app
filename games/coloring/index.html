@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>こっこちゃん おえかき | こっこちゃん</title>
+<link rel="stylesheet" href="../_shared/style.css">
+<style>
+canvas { display: block; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: inset 0 0 0 4px #ffb27a; touch-action: none; cursor: crosshair; }
+.colors { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; padding: 8px; }
+.col {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 3px solid #fff; box-shadow: 0 2px 0 #ffb27a;
+  cursor: pointer;
+}
+.col.active { border-color: #5d4037; transform: scale(1.15); }
+.tools { display: flex; gap: 8px; justify-content: center; padding: 4px; }
+.tools button {
+  padding: 8px 14px; background: #fff; border: 2px solid #ff7043;
+  color: #e64a19; border-radius: 12px; font-weight: bold; cursor: pointer;
+}
+.size { display: flex; gap: 4px; justify-content: center; padding: 4px; align-items:center; font-size: 0.85em; }
+.size input { width: 100px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <a href="../../" class="back">← もどる</a>
+    <h1>🎨 おえかき</h1>
+    <div class="hud">こっこちゃんを<br>いろどってね！</div>
+  </header>
+  <div id="stage" style="display:flex;align-items:center;justify-content:center;">
+    <canvas id="cv" width="320" height="380"></canvas>
+  </div>
+  <div class="colors" id="palette"></div>
+  <div class="size">ふとさ <input type="range" id="sz" min="2" max="30" value="8"></div>
+  <div class="tools">
+    <button id="bClear">🗑 ぜんぶ消す</button>
+    <button id="bErase">⬜ けしごむ</button>
+    <button id="bSave">💾 ほぞん</button>
+  </div>
+</div>
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const COLORS=['#000','#fff','#e57373','#ff7043','#ffca28','#fff176','#aed581','#66bb6a','#4dd0e1','#42a5f5','#7986cb','#ab47bc','#f06292','#a1887f'];
+let color='#000', size=8, drawing=false, eraser=false;
+const $=id=>document.getElementById(id);
+
+function drawTemplate(){
+  // こっこちゃんの線画
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.strokeStyle='#000';ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin='round';
+  // 顔
+  ctx.beginPath();ctx.arc(160,150,60,0,Math.PI*2);ctx.stroke();
+  // 髪（両サイド）
+  ctx.beginPath();
+  ctx.moveTo(100,140);ctx.quadraticCurveTo(80,260,110,290);ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(220,140);ctx.quadraticCurveTo(240,260,210,290);ctx.stroke();
+  // 前髪
+  ctx.beginPath();
+  ctx.moveTo(105,110);ctx.lineTo(160,130);ctx.lineTo(215,110);ctx.stroke();
+  // カチューシャの三角
+  ctx.beginPath();ctx.moveTo(130,108);ctx.lineTo(135,98);ctx.lineTo(140,108);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(155,103);ctx.lineTo(160,93);ctx.lineTo(165,103);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(180,108);ctx.lineTo(185,98);ctx.lineTo(190,108);ctx.stroke();
+  // 目
+  ctx.beginPath();ctx.arc(135,150,8,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.arc(185,150,8,0,Math.PI*2);ctx.stroke();
+  // ほっぺ
+  ctx.beginPath();ctx.arc(115,170,8,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.arc(205,170,8,0,Math.PI*2);ctx.stroke();
+  // 口
+  ctx.beginPath();ctx.arc(160,180,10,0,Math.PI);ctx.stroke();
+  // 体（服）
+  ctx.beginPath();
+  ctx.moveTo(100,290);ctx.lineTo(100,360);ctx.lineTo(220,360);ctx.lineTo(220,290);ctx.stroke();
+  // 首
+  ctx.beginPath();ctx.moveTo(140,210);ctx.lineTo(140,230);ctx.moveTo(180,210);ctx.lineTo(180,230);ctx.stroke();
+}
+function buildPalette(){
+  const p=$('palette');
+  COLORS.forEach((c,i)=>{
+    const e=document.createElement('div');
+    e.className='col'+(i===2?' active':'');
+    e.style.background=c;
+    e.onclick=()=>{
+      color=c;eraser=false;
+      document.querySelectorAll('.col').forEach(x=>x.classList.remove('active'));
+      e.classList.add('active');
+    };
+    p.appendChild(e);
+  });
+  color='#e57373';
+}
+function pos(e){
+  const r=cv.getBoundingClientRect();
+  const t=e.touches?e.touches[0]:e;
+  return {x:(t.clientX-r.left)*cv.width/r.width,y:(t.clientY-r.top)*cv.height/r.height};
+}
+function start(e){e.preventDefault();drawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);}
+function move(e){if(!drawing)return;e.preventDefault();const p=pos(e);
+  ctx.lineWidth=size;ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.strokeStyle=eraser?'#fff':color;
+  ctx.lineTo(p.x,p.y);ctx.stroke();
+}
+function end(){drawing=false;}
+cv.addEventListener('mousedown',start);cv.addEventListener('mousemove',move);
+cv.addEventListener('mouseup',end);cv.addEventListener('mouseleave',end);
+cv.addEventListener('touchstart',start,{passive:false});
+cv.addEventListener('touchmove',move,{passive:false});
+cv.addEventListener('touchend',end);
+$('sz').oninput=e=>size=+e.target.value;
+$('bClear').onclick=()=>{if(confirm('ぜんぶ消すよ？'))drawTemplate();};
+$('bErase').onclick=()=>{eraser=!eraser;$('bErase').style.background=eraser?'#ffe0b2':'#fff';};
+$('bSave').onclick=()=>{
+  const a=document.createElement('a');
+  a.download='kokko-coloring.png';
+  a.href=cv.toDataURL();
+  a.click();
+};
+buildPalette();drawTemplate();
+</script>
+</body>
+</html>

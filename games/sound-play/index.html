@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>こっこちゃん おとあそび | こっこちゃん</title>
+<link rel="stylesheet" href="../_shared/style.css">
+<style>
+.piano { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; padding: 12px; height: 100%; }
+.key {
+  display: flex; align-items: flex-end; justify-content: center;
+  padding-bottom: 8px;
+  font-size: 1.6em; color: #fff; font-weight: bold;
+  text-shadow: 0 2px 0 rgba(0,0,0,0.3);
+  border-radius: 12px;
+  box-shadow: inset 0 -8px 0 rgba(0,0,0,0.2), 0 4px 0 rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: transform 0.1s;
+  user-select: none;
+  background: var(--c);
+}
+.key:active, .key.active { transform: translateY(4px); box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2), 0 0 0 rgba(0,0,0,0.15); }
+.key .emo { font-size: 2em; position: absolute; opacity: 0.7; }
+.modes { display: flex; gap: 6px; justify-content: center; padding: 6px; }
+.modes button { padding: 8px 14px; background: #fff; border: 2px solid #ff7043; color: #e64a19; border-radius: 12px; font-weight: bold; cursor: pointer; }
+.modes button.active { background: #ff7043; color: #fff; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <a href="../../" class="back">← もどる</a>
+    <h1>🎵 おとあそび</h1>
+    <div class="hud">tap して<br>おとを ならそう！</div>
+  </header>
+  <div class="modes">
+    <button data-m="piano" class="active">🎹 ピアノ</button>
+    <button data-m="animal">🐔 どうぶつ</button>
+    <button data-m="rhythm">🥁 リズム</button>
+  </div>
+  <div id="message">どのキーをタップしても おとがでるよ！</div>
+  <div id="stage"><div class="piano" id="board"></div></div>
+</div>
+<script src="../_shared/sound.js"></script>
+<script>
+const COLORS=['#ff7043','#ffca28','#aed581','#66bb6a','#4dd0e1','#42a5f5','#7986cb','#ab47bc'];
+const NOTES=['ド','レ','ミ','ファ','ソ','ラ','シ','ド'];
+const ANIMALS=['🐔','🐶','🐱','🐮','🐷','🐸','🐵','🦁'];
+const ANIMAL_SOUNDS=['コケコッ','ワン','ニャー','モー','ブー','ケロ','ウキ','ガオー'];
+const RHYTHM=['🥁','👏','🎵','🔔','🎺','🎷','🎸','🎤'];
+let mode='piano';
+const $=id=>document.getElementById(id);
+
+function build(){
+  const b=$('board');
+  b.innerHTML='';
+  for(let i=0;i<8;i++){
+    const k=document.createElement('div');
+    k.className='key';
+    k.style.setProperty('--c',COLORS[i]);
+    let label='';
+    if(mode==='piano')label=NOTES[i];
+    else if(mode==='animal')label=ANIMALS[i];
+    else label=RHYTHM[i];
+    k.textContent=label;
+    const play=()=>{
+      KokkoSound.note(i);
+      k.classList.add('active');
+      setTimeout(()=>k.classList.remove('active'),200);
+      if(mode==='animal'){
+        $('message').textContent=ANIMAL_SOUNDS[i]+'！';
+      }else if(mode==='piano'){
+        $('message').textContent=NOTES[i];
+      }else{
+        $('message').textContent='ぽん♪';
+      }
+    };
+    k.addEventListener('click',play);
+    k.addEventListener('touchstart',e=>{e.preventDefault();play();},{passive:false});
+    b.appendChild(k);
+  }
+}
+document.querySelectorAll('.modes button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.modes button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');mode=b.dataset.m;build();
+});
+// キーボードでも遊べる
+document.addEventListener('keydown',e=>{
+  const k='asdfghjk'.indexOf(e.key.toLowerCase());
+  if(k>=0){const el=$('board').children[k];if(el)el.click();}
+});
+build();
+</script>
+</body>
+</html>

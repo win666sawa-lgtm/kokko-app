@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>たまご算数 | こっこちゃん</title>
+<link rel="stylesheet" href="../_shared/style.css">
+<style>
+.problem { font-size: 3em; text-align: center; margin: 20px; color: #5d4037; font-weight: bold; }
+.choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; padding: 20px; }
+.choice {
+  position: relative; height: 100px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.4em; font-weight: bold; color: #fff;
+  text-shadow: 0 2px 0 rgba(0,0,0,0.25); cursor: pointer;
+  background: var(--c, #ff7043);
+  border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+  box-shadow: inset -8px -10px 0 rgba(0,0,0,0.12), 0 4px 0 rgba(0,0,0,0.15);
+  transition: transform 0.15s;
+}
+.choice:active { transform: scale(0.95); }
+.choice.right { animation: pulse 0.4s; }
+.choice.wrong { animation: shake 0.4s; }
+@keyframes pulse { 50% { transform: scale(1.2); } }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+.diff { display: flex; gap: 8px; justify-content: center; padding: 8px; }
+.diff button { padding: 6px 12px; border: 2px solid #ff7043; background: #fff; color: #e64a19; border-radius: 12px; font-weight: bold; cursor: pointer; }
+.diff button.active { background: #ff7043; color: #fff; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <a href="../../" class="back">← もどる</a>
+    <h1>🥚 たまご算数</h1>
+    <div class="hud">てん: <b id="score">0</b><br>♥<b id="hp">3</b></div>
+  </header>
+  <div id="message">こたえの たまごを タップしてね！</div>
+  <div class="diff">
+    <button data-d="add" class="active">たし算</button>
+    <button data-d="sub">ひき算</button>
+    <button data-d="mul">かけ算</button>
+  </div>
+  <div id="stage">
+    <div class="problem" id="problem">2 + 3 = ?</div>
+    <div class="choices" id="choices"></div>
+  </div>
+</div>
+<div id="overlay" class="hidden"><div class="card">
+  <h2 id="overTitle">ゲームオーバー</h2><p id="overText"></p>
+  <button id="overBtn" class="big">もういちど</button>
+</div></div>
+<script src="../_shared/sound.js"></script>
+<script>
+const COLORS = ['#ff7043','#ffca28','#66bb6a','#42a5f5','#ab47bc','#ec407a','#26c6da','#ffa726'];
+let score=0, hp=3, mode='add', answer=0;
+const $=id=>document.getElementById(id);
+function gen(){
+  let a,b,op,r;
+  if(mode==='add'){a=1+Math.floor(Math.random()*9);b=1+Math.floor(Math.random()*9);op='+';r=a+b;}
+  else if(mode==='sub'){a=2+Math.floor(Math.random()*8);b=1+Math.floor(Math.random()*a);op='-';r=a-b;}
+  else{a=1+Math.floor(Math.random()*5);b=1+Math.floor(Math.random()*5);op='×';r=a*b;}
+  answer=r;
+  $('problem').textContent=`${a} ${op} ${b} = ?`;
+  // 4択生成
+  const choices=new Set([r]);
+  while(choices.size<4){const v=Math.max(0,r+Math.floor(Math.random()*7)-3);if(v!==r)choices.add(v);}
+  const arr=[...choices].sort(()=>Math.random()-0.5);
+  const c=$('choices'); c.innerHTML='';
+  arr.forEach((v,i)=>{
+    const e=document.createElement('div'); e.className='choice';
+    e.style.setProperty('--c',COLORS[i%COLORS.length]); e.textContent=v;
+    e.onclick=()=>tap(e,v);
+    c.appendChild(e);
+  });
+}
+function tap(el,v){
+  if(v===answer){
+    KokkoSound.correct(); el.classList.add('right');
+    score+=10; $('score').textContent=score;
+    $('message').textContent='せいかい！🎉';
+    setTimeout(()=>{$('message').textContent='つぎの もんだい！';gen();},700);
+  }else{
+    KokkoSound.wrong(); el.classList.add('wrong');
+    setTimeout(()=>el.classList.remove('wrong'),400);
+    hp--; $('hp').textContent=hp;
+    $('message').textContent='ちがうよ〜 もう一回！';
+    if(hp<=0){
+      KokkoSound.over();
+      $('overText').textContent=`てんすう: ${score}点`;
+      $('overlay').classList.remove('hidden');
+    }
+  }
+}
+document.querySelectorAll('.diff button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.diff button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); mode=b.dataset.d; gen();
+});
+$('overBtn').onclick=()=>{score=0;hp=3;$('score').textContent=0;$('hp').textContent=3;$('overlay').classList.add('hidden');gen();};
+gen();
+</script>
+</body>
+</html>

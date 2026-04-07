@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>はこの中のこっこちゃん | こっこちゃん</title>
+<link rel="stylesheet" href="../_shared/style.css">
+<style>
+.boxes {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  gap: 30px;
+}
+.box {
+  width: 100px; height: 110px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.box-img {
+  width: 100%; height: 100%;
+  background: linear-gradient(180deg,#ff7043 0%,#e64a19 100%);
+  border-radius: 8px 8px 12px 12px;
+  box-shadow: 0 6px 0 #c63d0c, inset 0 -10px 0 rgba(0,0,0,0.2);
+  position: absolute; bottom: 0;
+}
+.box-img::before {
+  content: '?'; position: absolute;
+  left: 50%; top: 50%; transform: translate(-50%,-50%);
+  font-size: 2.5em; color: #fff; font-weight: bold;
+  text-shadow: 0 2px 0 rgba(0,0,0,0.3);
+}
+.box.lifted .box-img { transform: translateY(-60px); transition: transform 0.5s; }
+.box .kokko {
+  position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+  font-size: 3em; opacity: 0;
+}
+.box.lifted .kokko { opacity: 1; transition: opacity 0.3s 0.3s; }
+.box:active { transform: scale(0.95); }
+@keyframes shuffle1 { 50% { transform: translateX(130px) rotate(180deg); } }
+@keyframes shuffle2 { 50% { transform: translateX(-130px) rotate(-180deg); } }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <a href="../../" class="back">← もどる</a>
+    <h1>📦 はこの中のこっこちゃん</h1>
+    <div class="hud">れんしょう: <b id="streak">0</b></div>
+  </header>
+  <div id="message">こっこちゃんを よく見ててね！</div>
+  <div id="stage">
+    <div class="boxes">
+      <div class="box" data-i="0"><div class="kokko">👧</div><div class="box-img"></div></div>
+      <div class="box" data-i="1"><div class="kokko">👧</div><div class="box-img"></div></div>
+      <div class="box" data-i="2"><div class="kokko">👧</div><div class="box-img"></div></div>
+    </div>
+  </div>
+  <div id="controls"><button id="startBtn" class="big">▶ シャッフル！</button></div>
+</div>
+<script src="../_shared/sound.js"></script>
+<script>
+const boxes=document.querySelectorAll('.box');
+let answer=0, streak=0, locked=true;
+const $=id=>document.getElementById(id);
+
+function setupShow(){
+  // 全部開けて答えを見せる
+  answer=Math.floor(Math.random()*3);
+  boxes.forEach((b,i)=>{
+    b.querySelector('.kokko').textContent=i===answer?'👧':'';
+    b.classList.add('lifted');
+  });
+  $('message').textContent='よく見て！ こっこちゃんはここ！';
+}
+function shuffle(){
+  if(!locked){return;}
+  $('message').textContent='シャッフル中...';
+  boxes.forEach(b=>b.classList.remove('lifted'));
+  // 2秒待ってシャッフル開始
+  setTimeout(()=>{
+    let cnt=0;
+    const max=4+streak*2;
+    function swap(){
+      if(cnt>=max){
+        locked=false;
+        $('message').textContent='どこにいる？ タップ！';
+        $('startBtn').textContent='▶ もう一回';
+        return;
+      }
+      const i=Math.floor(Math.random()*3);
+      let j;do{j=Math.floor(Math.random()*3);}while(j===i);
+      // DOMの並び替えで位置入れ替え（簡易: 透明に動かす）
+      KokkoSound.pop();
+      cnt++;
+      // answerも追従
+      if(answer===i)answer=j;
+      else if(answer===j)answer=i;
+      // 視覚効果
+      boxes[i].style.transition='transform 0.3s';
+      boxes[j].style.transition='transform 0.3s';
+      boxes[i].style.transform=`translateX(${(j-i)*130}px)`;
+      boxes[j].style.transform=`translateX(${(i-j)*130}px)`;
+      setTimeout(()=>{
+        boxes[i].style.transition='none';boxes[j].style.transition='none';
+        boxes[i].style.transform='';boxes[j].style.transform='';
+        // 中身も入れ替え
+        const tmp=boxes[i].querySelector('.kokko').textContent;
+        boxes[i].querySelector('.kokko').textContent=boxes[j].querySelector('.kokko').textContent;
+        boxes[j].querySelector('.kokko').textContent=tmp;
+        // answerは視覚位置で考えるのでそのまま
+        setTimeout(swap,150);
+      },350);
+    }
+    swap();
+  },1500);
+}
+boxes.forEach(b=>b.addEventListener('click',()=>{
+  if(locked)return;
+  locked=true;
+  const i=parseInt(b.dataset.i,10);
+  // すべて開ける
+  boxes.forEach((bb,bi)=>{
+    bb.querySelector('.kokko').textContent=bi===answer?'👧':'';
+    bb.classList.add('lifted');
+  });
+  if(i===answer){
+    KokkoSound.clear();streak++;$('streak').textContent=streak;
+    $('message').textContent='せいかい！🎉';
+  }else{
+    KokkoSound.over();streak=0;$('streak').textContent=0;
+    $('message').textContent='ざんねん…正解はあれ！';
+  }
+}));
+$('startBtn').onclick=()=>{
+  locked=true;
+  setupShow();
+  setTimeout(shuffle,1500);
+};
+// 初期表示
+setupShow();
+</script>
+</body>
+</html>

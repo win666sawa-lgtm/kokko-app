@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>すうじジャンプ | こっこちゃん</title>
+<link rel="stylesheet" href="../_shared/style.css">
+<style>
+.grid { display: grid; gap: 8px; padding: 16px; height: 100%; }
+.cell {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--c, #ff7043); color: #fff;
+  border-radius: 12px; font-size: 1.6em; font-weight: bold;
+  text-shadow: 0 2px 0 rgba(0,0,0,0.25); cursor: pointer;
+  box-shadow: inset 0 -6px 0 rgba(0,0,0,0.18), 0 4px 0 rgba(0,0,0,0.15);
+  position: relative; transition: transform 0.1s;
+}
+.cell:active { transform: scale(0.95); }
+.cell.done { background: #bdbdbd !important; opacity: 0.5; }
+.cell.kokko::after {
+  content: '🐔'; position: absolute; font-size: 1.5em;
+  top: -20px; left: 50%; transform: translateX(-50%);
+  animation: bounce 0.5s infinite alternate;
+}
+@keyframes bounce { to { top: -28px; } }
+.cell.wrong { animation: shake 0.4s; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <a href="../../" class="back">← もどる</a>
+    <h1>🎯 すうじジャンプ</h1>
+    <div class="hud">レベル: <b id="lvl">1</b><br>てん: <b id="score">0</b></div>
+  </header>
+  <div id="message">1から じゅんばんに タップ！</div>
+  <div id="stage"><div class="grid" id="grid"></div></div>
+</div>
+<div id="overlay" class="hidden"><div class="card">
+  <h2 id="overTitle">クリア！</h2><p id="overText"></p>
+  <button id="overBtn" class="big">つぎへ</button>
+</div></div>
+<script src="../_shared/sound.js"></script>
+<script>
+const COLORS=['#ff7043','#ffca28','#66bb6a','#42a5f5','#ab47bc','#ec407a','#26c6da','#ffa726','#9ccc65'];
+let lvl=1, score=0, next=1, max=4;
+const $=id=>document.getElementById(id);
+function gen(){
+  next=1;
+  max=Math.min(16, 3+lvl);
+  const cols=Math.ceil(Math.sqrt(max));
+  const rows=Math.ceil(max/cols);
+  const grid=$('grid');
+  grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  grid.style.gridTemplateRows=`repeat(${rows},1fr)`;
+  grid.innerHTML='';
+  const nums=Array.from({length:max},(_,i)=>i+1).sort(()=>Math.random()-0.5);
+  nums.forEach((n,i)=>{
+    const c=document.createElement('div'); c.className='cell';
+    c.style.setProperty('--c',COLORS[(n-1)%COLORS.length]);
+    c.textContent=n; c.dataset.num=n;
+    if(n===1)c.classList.add('kokko');
+    c.onclick=()=>tap(c,n);
+    grid.appendChild(c);
+  });
+  $('message').textContent=`1から ${max} まで じゅんばんに タップ！`;
+}
+function tap(el,n){
+  if(el.classList.contains('done'))return;
+  if(n===next){
+    KokkoSound.correct(); el.classList.add('done'); el.classList.remove('kokko');
+    score+=10*lvl; $('score').textContent=score;
+    next++;
+    if(next>max){
+      KokkoSound.clear();
+      $('overText').textContent=`レベル ${lvl} クリア！  てんすう: ${score}`;
+      $('overlay').classList.remove('hidden');
+    }else{
+      // 次のkokkoマーク
+      const nx=document.querySelector(`.cell[data-num="${next}"]`);
+      if(nx)nx.classList.add('kokko');
+    }
+  }else{
+    KokkoSound.wrong(); el.classList.add('wrong');
+    setTimeout(()=>el.classList.remove('wrong'),400);
+  }
+}
+$('overBtn').onclick=()=>{lvl++;$('lvl').textContent=lvl;$('overlay').classList.add('hidden');gen();};
+gen();
+</script>
+</body>
+</html>

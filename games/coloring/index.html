@@ -6,7 +6,20 @@
 <title>こっこちゃん おえかき | こっこちゃん</title>
 <link rel="stylesheet" href="../_shared/style.css">
 <style>
-canvas { display: block; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: inset 0 0 0 4px #ffb27a; touch-action: none; cursor: crosshair; max-width: 100%; }
+canvas {
+  display: block;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 4px #ffb27a;
+  touch-action: none;
+  cursor: crosshair;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  aspect-ratio: 320 / 380;
+}
 
 /* シェアモーダル */
 .share-modal {
@@ -68,9 +81,17 @@ canvas { display: block; margin: 0 auto; background: #fff; border-radius: 12px; 
 .cancel-btn { background: #fff; border: 2px solid #ff7043; color: #e64a19; }
 .go-btn { background: #ff7043; border: 2px solid #ff7043; color: #fff; }
 .cancel-btn:active, .go-btn:active { transform: translateY(2px); }
-.colors { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; padding: 8px; }
+/* レイアウト固定: ヘッダー・ツール・パレット・サイズは縮まない、stageだけ縮む */
+#app { padding: 6px; gap: 0; }
+header { flex-shrink: 0; padding: 4px 8px; margin-bottom: 4px; }
+header h1 { font-size: 1em; }
+header .hud { font-size: 0.75em; }
+.tools, .colors, .size { flex-shrink: 0; }
+#stage { flex: 1 1 0; min-height: 0; }
+
+.colors { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; padding: 4px; }
 .col {
-  width: 36px; height: 36px; border-radius: 50%;
+  width: 30px; height: 30px; border-radius: 50%;
   border: 3px solid #fff; box-shadow: 0 2px 0 #ffb27a;
   cursor: pointer;
 }
@@ -81,6 +102,10 @@ canvas { display: block; margin: 0 auto; background: #fff; border-radius: 12px; 
   justify-content: center;
   padding: 4px;
   flex-wrap: wrap;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 3px 0 #ffb27a;
+  margin: 0 4px 4px;
 }
 .tools button {
   padding: 8px 12px;
@@ -114,8 +139,8 @@ canvas { display: block; margin: 0 auto; background: #fff; border-radius: 12px; 
   </div>
   <div class="colors" id="palette"></div>
   <div class="size">ふとさ <input type="range" id="sz" min="2" max="30" value="8"></div>
-  <div id="stage" style="display:flex;align-items:center;justify-content:center;flex:1;min-height:0;">
-    <canvas id="cv" width="320" height="380" style="max-height:100%;width:auto;"></canvas>
+  <div id="stage" style="display:flex;align-items:center;justify-content:center;">
+    <canvas id="cv" width="320" height="380"></canvas>
   </div>
 </div>
 

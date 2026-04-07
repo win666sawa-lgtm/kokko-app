@@ -6,26 +6,146 @@
 <title>たまご算数 | こっこちゃん</title>
 <link rel="stylesheet" href="../_shared/style.css">
 <style>
-.problem { font-size: 3em; text-align: center; margin: 20px; color: #5d4037; font-weight: bold; }
-.choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; padding: 20px; }
-.choice {
-  position: relative; height: 100px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 2.4em; font-weight: bold; color: #fff;
-  text-shadow: 0 2px 0 rgba(0,0,0,0.25); cursor: pointer;
-  background: var(--c, #ff7043);
-  border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
-  box-shadow: inset -8px -10px 0 rgba(0,0,0,0.12), 0 4px 0 rgba(0,0,0,0.15);
-  transition: transform 0.15s;
+.diff { display: flex; gap: 6px; justify-content: center; padding: 6px; flex-wrap: wrap; }
+.diff button {
+  padding: 6px 14px; border: 2px solid #ff7043; background: #fff;
+  color: #e64a19; border-radius: 999px; font-weight: bold; cursor: pointer;
+  font-size: 0.95em;
 }
-.choice:active { transform: scale(0.95); }
-.choice.right { animation: pulse 0.4s; }
-.choice.wrong { animation: shake 0.4s; }
-@keyframes pulse { 50% { transform: scale(1.2); } }
-@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
-.diff { display: flex; gap: 8px; justify-content: center; padding: 8px; }
-.diff button { padding: 6px 12px; border: 2px solid #ff7043; background: #fff; color: #e64a19; border-radius: 12px; font-weight: bold; cursor: pointer; }
 .diff button.active { background: #ff7043; color: #fff; }
+
+#stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+}
+
+.problem-box {
+  width: 100%;
+  text-align: center;
+  padding: 16px 8px 4px;
+  flex-shrink: 0;
+}
+.problem {
+  display: inline-block;
+  font-size: clamp(2em, 8vw, 3em);
+  font-weight: bold;
+  color: #5d4037;
+  background: #fff;
+  padding: 8px 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 0 #ffb27a;
+  letter-spacing: 0.05em;
+}
+.problem .num { color: #e64a19; }
+.problem .op { color: #ff7043; margin: 0 6px; }
+.problem .q { color: #ab47bc; }
+
+.choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 16px;
+  width: 100%;
+  max-width: 480px;
+  flex: 1;
+  align-content: center;
+}
+
+.choice {
+  position: relative;
+  aspect-ratio: 1 / 1.05;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.choice:active { transform: scale(0.92); }
+
+.choice svg { width: 100%; height: 100%; display: block; }
+.choice .num {
+  position: absolute;
+  font-size: clamp(1.8em, 7vw, 2.6em);
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 3px 0 rgba(0,0,0,0.25), 0 0 8px rgba(0,0,0,0.15);
+  pointer-events: none;
+  font-family: -apple-system, "Segoe UI", "Comic Sans MS", sans-serif;
+}
+
+.choice.right { animation: rightAnim 0.6s; }
+.choice.wrong { animation: wrongAnim 0.5s; }
+@keyframes rightAnim {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.2) rotate(-5deg); }
+  60%  { transform: scale(1.2) rotate(5deg); }
+  100% { transform: scale(0); opacity: 0; }
+}
+@keyframes wrongAnim {
+  0%,100% { transform: translateX(0); }
+  20%,60% { transform: translateX(-10px) rotate(-5deg); }
+  40%,80% { transform: translateX(10px) rotate(5deg); }
+}
+
+.kokko-corner {
+  position: absolute;
+  bottom: 8px; right: 8px;
+  width: 80px;
+  pointer-events: none;
+  z-index: 10;
+}
+.kokko-corner img { width: 100%; display: block; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.15)); }
+.bubble {
+  position: absolute;
+  bottom: 70px; right: 80px;
+  background: #fff;
+  border: 2px solid #ff7043;
+  border-radius: 14px;
+  padding: 6px 12px;
+  font-size: 0.9em;
+  font-weight: bold;
+  color: #e64a19;
+  white-space: nowrap;
+  box-shadow: 0 3px 0 #ffb27a;
+}
+.bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px; right: 14px;
+  width: 0; height: 0;
+  border: 6px solid transparent;
+  border-top-color: #ff7043;
+  border-bottom: 0;
+}
+
+.hearts-row {
+  display: flex; gap: 2px; align-items: center;
+}
+.heart { font-size: 1.1em; transition: all 0.3s; }
+.heart.lost { filter: grayscale(1); transform: scale(0.7); opacity: 0.4; }
+
+.streak {
+  display: inline-block;
+  background: #fff8e1;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.85em;
+  color: #f57c00;
+  font-weight: bold;
+}
+
+.confetti {
+  position: absolute;
+  width: 8px; height: 8px;
+  pointer-events: none;
+  z-index: 50;
+}
+@keyframes confettiFall {
+  to { transform: translate(var(--dx), var(--dy)) rotate(720deg); opacity: 0; }
+}
 </style>
 </head>
 <body>
@@ -33,71 +153,234 @@
   <header>
     <a href="../../" class="back">← もどる</a>
     <h1>🥚 たまご算数</h1>
-    <div class="hud">てん: <b id="score">0</b><br>♥<b id="hp">3</b></div>
+    <div class="hud">
+      <span>てん: <b id="score">0</b></span>
+      <div class="hearts-row" id="hearts"></div>
+    </div>
   </header>
-  <div id="message">こたえの たまごを タップしてね！</div>
+
   <div class="diff">
-    <button data-d="add" class="active">たし算</button>
-    <button data-d="sub">ひき算</button>
-    <button data-d="mul">かけ算</button>
+    <button data-d="add" data-r="5" class="active">たし算 (やさしい)</button>
+    <button data-d="add" data-r="9">たし算 (むずかしい)</button>
+    <button data-d="sub" data-r="9">ひき算</button>
+    <button data-d="mul" data-r="5">かけ算</button>
   </div>
+
+  <div id="message">こたえの たまごを タップしてね！ <span class="streak" id="streakBox" style="display:none;">れんぞく <b id="streak">0</b>!</span></div>
+
   <div id="stage">
-    <div class="problem" id="problem">2 + 3 = ?</div>
+    <div class="problem-box">
+      <div class="problem" id="problem">
+        <span class="num" id="a">2</span><span class="op">+</span><span class="num" id="b">3</span><span class="op">=</span><span class="q">?</span>
+      </div>
+    </div>
     <div class="choices" id="choices"></div>
+
+    <div class="bubble" id="bubble">がんばろう！</div>
+    <div class="kokko-corner"><img src="../number-collect/assets/kokko.png" alt="こっこちゃん"></div>
   </div>
 </div>
+
 <div id="overlay" class="hidden"><div class="card">
-  <h2 id="overTitle">ゲームオーバー</h2><p id="overText"></p>
+  <h2 id="overTitle">ゲームオーバー</h2>
+  <p id="overText"></p>
   <button id="overBtn" class="big">もういちど</button>
 </div></div>
+
 <script src="../_shared/sound.js"></script>
 <script>
-const COLORS = ['#ff7043','#ffca28','#66bb6a','#42a5f5','#ab47bc','#ec407a','#26c6da','#ffa726'];
-let score=0, hp=3, mode='add', answer=0;
-const $=id=>document.getElementById(id);
-function gen(){
-  let a,b,op,r;
-  if(mode==='add'){a=1+Math.floor(Math.random()*9);b=1+Math.floor(Math.random()*9);op='+';r=a+b;}
-  else if(mode==='sub'){a=2+Math.floor(Math.random()*8);b=1+Math.floor(Math.random()*a);op='-';r=a-b;}
-  else{a=1+Math.floor(Math.random()*5);b=1+Math.floor(Math.random()*5);op='×';r=a*b;}
-  answer=r;
-  $('problem').textContent=`${a} ${op} ${b} = ?`;
-  // 4択生成
-  const choices=new Set([r]);
-  while(choices.size<4){const v=Math.max(0,r+Math.floor(Math.random()*7)-3);if(v!==r)choices.add(v);}
-  const arr=[...choices].sort(()=>Math.random()-0.5);
-  const c=$('choices'); c.innerHTML='';
-  arr.forEach((v,i)=>{
-    const e=document.createElement('div'); e.className='choice';
-    e.style.setProperty('--c',COLORS[i%COLORS.length]); e.textContent=v;
-    e.onclick=()=>tap(e,v);
+const COLORS = [
+  ['#ff7043','#e64a19'], // オレンジ
+  ['#ffca28','#f57c00'], // 黄
+  ['#66bb6a','#388e3c'], // 緑
+  ['#42a5f5','#1976d2'], // 青
+  ['#ab47bc','#7b1fa2'], // 紫
+  ['#ec407a','#c2185b'], // ピンク
+];
+const $ = id => document.getElementById(id);
+
+let score = 0;
+let hearts = 3;
+let streak = 0;
+let mode = 'add';
+let range = 5;
+let answer = 0;
+let locked = false;
+
+// --- たまご SVG 生成 ---
+function eggSVG(colorIdx) {
+  const [c1, c2] = COLORS[colorIdx % COLORS.length];
+  return `
+    <svg viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="g${colorIdx}" cx="35%" cy="30%">
+          <stop offset="0%" stop-color="#fff" stop-opacity="0.6"/>
+          <stop offset="40%" stop-color="${c1}"/>
+          <stop offset="100%" stop-color="${c2}"/>
+        </radialGradient>
+      </defs>
+      <ellipse cx="50" cy="98" rx="38" ry="6" fill="rgba(0,0,0,0.15)"/>
+      <path d="M50 5 C 78 5, 92 50, 92 70 C 92 92, 75 102, 50 102 C 25 102, 8 92, 8 70 C 8 50, 22 5, 50 5 Z"
+            fill="url(#g${colorIdx})" stroke="${c2}" stroke-width="2"/>
+      <ellipse cx="38" cy="35" rx="10" ry="14" fill="rgba(255,255,255,0.5)"/>
+    </svg>
+  `;
+}
+
+// --- 数字を組み立てる ---
+function setProblem(a, b, op) {
+  $('a').textContent = a;
+  $('b').textContent = b;
+  $('problem').querySelectorAll('.op')[0].textContent = op;
+}
+
+function generate() {
+  let a, b, op, r;
+  if (mode === 'add') {
+    a = 1 + Math.floor(Math.random() * range);
+    b = 1 + Math.floor(Math.random() * range);
+    op = '+'; r = a + b;
+  } else if (mode === 'sub') {
+    a = 2 + Math.floor(Math.random() * (range - 1));
+    b = 1 + Math.floor(Math.random() * a);
+    op = '−'; r = a - b;
+  } else {
+    a = 1 + Math.floor(Math.random() * range);
+    b = 1 + Math.floor(Math.random() * range);
+    op = '×'; r = a * b;
+  }
+  answer = r;
+  setProblem(a, b, op);
+
+  // 4択作成
+  const set = new Set([r]);
+  let safety = 0;
+  while (set.size < 4 && safety < 50) {
+    safety++;
+    const offset = Math.floor(Math.random() * 9) - 4;
+    if (offset === 0) continue;
+    const v = r + offset;
+    if (v >= 0) set.add(v);
+  }
+  // 念のため埋める
+  let n = 0;
+  while (set.size < 4) { if (!set.has(n)) set.add(n); n++; }
+
+  const arr = [...set].sort(() => Math.random() - 0.5);
+  const c = $('choices');
+  c.innerHTML = '';
+  arr.forEach((v, i) => {
+    const e = document.createElement('div');
+    e.className = 'choice';
+    e.innerHTML = eggSVG(i) + `<div class="num">${v}</div>`;
+    e.addEventListener('click', () => onTap(e, v));
+    e.addEventListener('touchstart', ev => { ev.preventDefault(); onTap(e, v); }, { passive: false });
     c.appendChild(e);
   });
+  locked = false;
 }
-function tap(el,v){
-  if(v===answer){
-    KokkoSound.correct(); el.classList.add('right');
-    score+=10; $('score').textContent=score;
-    $('message').textContent='せいかい！🎉';
-    setTimeout(()=>{$('message').textContent='つぎの もんだい！';gen();},700);
-  }else{
-    KokkoSound.wrong(); el.classList.add('wrong');
-    setTimeout(()=>el.classList.remove('wrong'),400);
-    hp--; $('hp').textContent=hp;
-    $('message').textContent='ちがうよ〜 もう一回！';
-    if(hp<=0){
-      KokkoSound.over();
-      $('overText').textContent=`てんすう: ${score}点`;
-      $('overlay').classList.remove('hidden');
+
+function setBubble(text) { $('bubble').textContent = text; }
+function setMessage(text) { $('message').innerHTML = text + ' <span class="streak" id="streakBox" style="' + (streak >= 3 ? '' : 'display:none;') + '">れんぞく <b>' + streak + '</b>!</span>'; }
+
+function drawHearts() {
+  const h = $('hearts');
+  h.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const s = document.createElement('span');
+    s.className = 'heart' + (i >= hearts ? ' lost' : '');
+    s.textContent = '❤️';
+    h.appendChild(s);
+  }
+}
+
+function confetti(x, y) {
+  for (let i = 0; i < 12; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = x + 'px';
+    c.style.top = y + 'px';
+    c.style.background = COLORS[i % COLORS.length][0];
+    c.style.borderRadius = '50%';
+    const dx = (Math.random() - 0.5) * 200 + 'px';
+    const dy = (-Math.random() * 200 - 50) + 'px';
+    c.style.setProperty('--dx', dx);
+    c.style.setProperty('--dy', dy);
+    c.style.animation = 'confettiFall 1s forwards ease-out';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 1000);
+  }
+}
+
+function onTap(el, v) {
+  if (locked) return;
+  if (v === answer) {
+    locked = true;
+    KokkoSound.correct();
+    el.classList.add('right');
+    streak++;
+    const bonus = streak >= 3 ? streak * 5 : 0;
+    score += 10 + bonus;
+    $('score').textContent = score;
+    setBubble(streak >= 3 ? 'すごい！' + streak + 'れんぞく！' : 'せいかい！');
+    setMessage('🎉 せいかい！+' + (10 + bonus) + 'てん');
+    const rect = el.getBoundingClientRect();
+    confetti(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    setTimeout(() => {
+      setMessage('つぎの もんだい！');
+      generate();
+    }, 900);
+  } else {
+    KokkoSound.wrong();
+    el.classList.add('wrong');
+    setTimeout(() => el.classList.remove('wrong'), 500);
+    streak = 0;
+    hearts--;
+    drawHearts();
+    setBubble('ちがうよ〜');
+    setMessage('もう一回 ちょうせん！');
+    if (hearts <= 0) {
+      gameOver();
     }
   }
 }
-document.querySelectorAll('.diff button').forEach(b=>b.onclick=()=>{
-  document.querySelectorAll('.diff button').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active'); mode=b.dataset.d; gen();
+
+function gameOver() {
+  KokkoSound.over();
+  $('overTitle').textContent = score >= 50 ? 'よくできました！' : 'ゲームオーバー';
+  $('overText').textContent = `てんすう: ${score}点  /  さいだいれんぞく: ${maxStreak}`;
+  $('overlay').classList.remove('hidden');
+}
+
+let maxStreak = 0;
+function reset() {
+  score = 0; hearts = 3; streak = 0; maxStreak = 0;
+  $('score').textContent = 0;
+  drawHearts();
+  setBubble('がんばろう！');
+  setMessage('こたえの たまごを タップしてね！');
+  $('overlay').classList.add('hidden');
+  generate();
+}
+
+// streak の最大値を追跡
+const origOnTap = onTap;
+window.onTap = function(el, v) {
+  origOnTap(el, v);
+  if (streak > maxStreak) maxStreak = streak;
+};
+
+document.querySelectorAll('.diff button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.diff button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  mode = b.dataset.d;
+  range = parseInt(b.dataset.r, 10);
+  reset();
 });
-$('overBtn').onclick=()=>{score=0;hp=3;$('score').textContent=0;$('hp').textContent=3;$('overlay').classList.add('hidden');gen();};
-gen();
+$('overBtn').onclick = reset;
+
+drawHearts();
+generate();
 </script>
 </body>
 </html>

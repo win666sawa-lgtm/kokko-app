@@ -6,18 +6,70 @@
 <title>こっこちゃんはどこ？ | こっこちゃん</title>
 <link rel="stylesheet" href="../_shared/style.css">
 <style>
-#field { position: absolute; inset: 0; }
-.item {
-  position: absolute; font-size: 2em; cursor: pointer;
-  transform: translate(-50%,-50%);
-  transition: transform 0.1s;
+#stage { padding: 0; }
+#field {
+  position: absolute; inset: 0;
+  overflow: hidden;
 }
-.item:active { transform: translate(-50%,-50%) scale(1.3); }
-.item.found { animation: found 0.6s; }
+.item {
+  position: absolute;
+  font-size: 2em;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition: transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.item:active { transform: translate(-50%, -50%) scale(1.3); }
+.item.kokko {
+  width: var(--ksize, 50px);
+  height: auto;
+}
+.item.kokko img {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+.item.found {
+  animation: found 1s forwards;
+  z-index: 100;
+}
 @keyframes found {
   0%   { transform: translate(-50%,-50%) scale(1); }
-  50%  { transform: translate(-50%,-50%) scale(2) rotate(360deg); }
-  100% { transform: translate(-50%,-50%) scale(0); opacity: 0; }
+  30%  { transform: translate(-50%,-50%) scale(2) rotate(360deg); }
+  100% { transform: translate(-50%,-50%) scale(0) rotate(720deg); opacity: 0; }
+}
+.hint {
+  position: absolute;
+  top: 8px; left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 2px solid #ff7043;
+  border-radius: 14px;
+  padding: 6px 14px;
+  font-size: 0.85em;
+  font-weight: bold;
+  color: #e64a19;
+  box-shadow: 0 3px 0 #ffb27a;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hint img { width: 32px; height: auto; vertical-align: middle; }
+.ripple {
+  position: absolute;
+  width: 30px; height: 30px;
+  border: 3px solid #f44336;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%,-50%);
+  animation: ripple 0.6s forwards;
+}
+@keyframes ripple {
+  0% { width: 10px; height: 10px; opacity: 1; }
+  100% { width: 80px; height: 80px; opacity: 0; }
 }
 </style>
 </head>
@@ -28,69 +80,122 @@
     <h1>👀 こっこちゃんはどこ？</h1>
     <div class="hud">レベル: <b id="lvl">1</b><br>たいむ: <b id="time">30</b></div>
   </header>
-  <div id="message">こっこちゃんを 見つけて タップ！</div>
-  <div id="stage"><div id="field"></div></div>
+  <div id="message">この子を 見つけてね！</div>
+  <div id="stage">
+    <div class="hint">さがすのは：<img src="../number-collect/assets/kokko.png" alt="こっこちゃん"></div>
+    <div id="field"></div>
+  </div>
 </div>
 <div id="overlay" class="hidden"><div class="card">
-  <h2 id="overTitle">クリア！</h2><p id="overText"></p>
+  <h2 id="overTitle">クリア！</h2>
+  <p id="overText"></p>
   <button id="overBtn" class="big">つぎへ</button>
 </div></div>
 <script src="../_shared/sound.js"></script>
 <script>
-const DECOYS=['🐔','🐤','🐣','🦆','🐦','🦜','🐧','🦢','🐓','🦉'];
-const KOKKO='👧'; // こっこちゃん（女の子絵文字）
-let lvl=1, timeLeft=30, timer, gameOver;
-const $=id=>document.getElementById(id);
+const DECOYS = ['🐔','🐤','🐣','🐦','🐧','🦆','🦢','🦅','🦉','🦜','🐓','🐰','🐱','🐶','🐻','🐼','🐨','🦊','🐯','🦁','🐮','🐷','🐭','🐹','🐸','🐵','🦒','🦓','🦄','🐴'];
+const $ = id => document.getElementById(id);
 
-function gen(){
-  const field=$('field');
-  field.innerHTML='';
-  const rect=$('stage').getBoundingClientRect();
-  const num=20+lvl*10;
+let lvl = 1, timeLeft = 30, timer = null, gameOver = false;
+
+function rndPos(rect, pad) {
+  return {
+    x: pad + Math.random() * (rect.width  - pad * 2),
+    y: pad + Math.random() * (rect.height - pad * 2),
+  };
+}
+
+function gen() {
+  const field = $('field');
+  field.innerHTML = '';
+  const stage = $('stage');
+  const rect = stage.getBoundingClientRect();
+  const num = 30 + lvl * 15;
+  const ksize = Math.max(35, 65 - lvl * 4);
+
   // ダミー
-  for(let i=0;i<num;i++){
-    const e=document.createElement('div');
-    e.className='item';
-    e.textContent=DECOYS[Math.floor(Math.random()*DECOYS.length)];
-    e.style.left=(20+Math.random()*(rect.width-40))+'px';
-    e.style.top=(20+Math.random()*(rect.height-40))+'px';
-    e.onclick=()=>{KokkoSound.wrong();timeLeft=Math.max(0,timeLeft-3);$('time').textContent=timeLeft;};
+  for (let i = 0; i < num; i++) {
+    const e = document.createElement('div');
+    e.className = 'item';
+    e.textContent = DECOYS[Math.floor(Math.random() * DECOYS.length)];
+    e.style.fontSize = (1.6 + Math.random() * 0.8) + 'em';
+    const p = rndPos(rect, 30);
+    e.style.left = p.x + 'px';
+    e.style.top  = p.y + 'px';
+    e.addEventListener('click', (ev) => {
+      KokkoSound.wrong();
+      timeLeft = Math.max(0, timeLeft - 2);
+      $('time').textContent = timeLeft;
+      ripple(ev.clientX - rect.left, ev.clientY - rect.top, field);
+    });
     field.appendChild(e);
   }
-  // 本物
-  const k=document.createElement('div');
-  k.className='item';k.textContent=KOKKO;
-  k.style.left=(20+Math.random()*(rect.width-40))+'px';
-  k.style.top=(20+Math.random()*(rect.height-40))+'px';
-  k.onclick=()=>found(k);
+
+  // 本物のこっこちゃん（最後に追加して上に表示）
+  const k = document.createElement('div');
+  k.className = 'item kokko';
+  k.style.setProperty('--ksize', ksize + 'px');
+  k.innerHTML = '<img src="../number-collect/assets/kokko.png" alt="こっこちゃん">';
+  const p = rndPos(rect, 50);
+  k.style.left = p.x + 'px';
+  k.style.top  = p.y + 'px';
+  k.addEventListener('click', () => found(k));
   field.appendChild(k);
 }
-function found(k){
+
+function ripple(x, y, parent) {
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  r.style.left = x + 'px';
+  r.style.top = y + 'px';
+  parent.appendChild(r);
+  setTimeout(() => r.remove(), 600);
+}
+
+function found(k) {
+  if (gameOver) return;
+  gameOver = true;
   KokkoSound.clear();
   k.classList.add('found');
   clearInterval(timer);
-  $('overTitle').textContent='みつけた！🎉';
-  $('overText').textContent=`のこり ${timeLeft}秒  /  レベル ${lvl}`;
-  setTimeout(()=>$('overlay').classList.remove('hidden'),700);
+  setTimeout(() => {
+    $('overTitle').textContent = 'みつけた！🎉';
+    $('overText').textContent = `のこり ${timeLeft}秒  /  レベル ${lvl}`;
+    $('overlay').classList.remove('hidden');
+  }, 800);
 }
-function start(){
-  timeLeft=Math.max(15,30-lvl*2);$('time').textContent=timeLeft;$('lvl').textContent=lvl;
+
+function start() {
+  gameOver = false;
+  timeLeft = Math.max(15, 35 - lvl * 2);
+  $('time').textContent = timeLeft;
+  $('lvl').textContent = lvl;
+  $('message').textContent = 'こっこちゃんを 見つけて タップ！';
   gen();
-  timer=setInterval(()=>{
-    timeLeft--;$('time').textContent=timeLeft;
-    if(timeLeft<=0){
-      clearInterval(timer);KokkoSound.over();
-      $('overTitle').textContent='じかん切れ';
-      $('overText').textContent=`もう一回チャレンジ！`;
+  timer = setInterval(() => {
+    if (gameOver) return;
+    timeLeft--;
+    $('time').textContent = timeLeft;
+    if (timeLeft <= 0) {
+      gameOver = true;
+      clearInterval(timer);
+      KokkoSound.over();
+      $('overTitle').textContent = 'じかん切れ';
+      $('overText').textContent = 'もう一回 ちょうせん！';
       $('overlay').classList.remove('hidden');
     }
-  },1000);
+  }, 1000);
 }
-$('overBtn').onclick=()=>{
-  if($('overTitle').textContent==='じかん切れ')lvl=1;else lvl++;
-  $('overlay').classList.add('hidden');start();
+
+$('overBtn').onclick = () => {
+  if ($('overTitle').textContent === 'じかん切れ') lvl = 1;
+  else lvl++;
+  $('overlay').classList.add('hidden');
+  start();
 };
-setTimeout(start,300);
+
+setTimeout(start, 200);
+window.addEventListener('resize', () => { if (!gameOver) gen(); });
 </script>
 </body>
 </html>
